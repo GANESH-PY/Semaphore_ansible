@@ -1,0 +1,42 @@
+---
+- name: Setup users and push ssh key
+  hosts: all
+  become: True
+  become_user: root
+  
+  vars:
+    ansible_password: f$us#r@098
+    ansible_become_password: f$us#r@098
+    sudo_password: f$us#r@098
+    script_src: Semaphore_ansible/scripts/user_setup.sh
+    hostname_arg: "{{ inventory_hostname }}" 
+
+  tasks:
+    - name: Check if flag exists
+      ansible.builtin.stat:
+        path: /home/fsuser/user_setup.completed
+      register: flag_file
+
+    - name: Copy custom script to remote host
+      ansible.builtin.copy:
+        src: "{{ script_src }}"
+        dest: /tmp/script.sh
+        mode: "0755"
+      when: flag_file.stat.exists == False
+
+    - name: Execute script on remote host
+      ansible.builtin.command:
+        cmd: /tmp/script.sh "{{ hostname_arg }}"
+      when: flag_file.stat.exists == False
+
+    - name: Create flag file if script was executed
+      ansible.builtin.file:
+        path: /home/fsuser/user_setup.completed
+        state: touch
+      when: flag_file.stat.exists == False
+
+    - name: Delete script from remote host
+      ansible.builtin.file:
+        path: /tmp/script.sh
+        state: absent
+      when: flag_file.stat.exists == False

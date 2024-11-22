@@ -1,7 +1,7 @@
 ---
-- name: Setup users and push ssh key
+- name: Setup users and push SSH key
   hosts: all
-  become: True
+  become: true
   become_user: root
   
   vars:

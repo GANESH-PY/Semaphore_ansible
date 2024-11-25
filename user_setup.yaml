@@ -36,8 +36,8 @@
         state: touch
       when: flag_file.stat.exists == False
 
-    - name: Delete script from remote host
-      ansible.builtin.file:
-        path: /tmp/script.sh
-        state: absent
-      when: flag_file.stat.exists == False
+    # - name: Delete script from remote host
+    #   ansible.builtin.file:
+    #     path: /tmp/script.sh
+    #     state: absent
+    #   when: flag_file.stat.exists == False

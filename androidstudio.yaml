@@ -1,0 +1,39 @@
+---
+- name: Install Android Studio
+  hosts: localhost
+  become: true
+  become_user: root
+  vars:
+    ansible_become_password: "f$us#r@098"
+
+  tasks:
+    - name: Update and upgrade APT packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install snapd
+      apt:
+        name: snapd
+        state: present
+
+    - name: Ensure snapd is running
+      service:
+        name: snapd
+        state: started
+        enabled: true
+
+    - name: Install Android Studio using snap
+      snap:
+        name: android-studio
+        classic: true
+        state: present
+
+    - name: Verify Android Studio installation
+      command: android-studio --version
+      register: android_studio_version
+      ignore_errors: yes
+
+    - name: Display Android Studio version
+      debug:
+        msg: "{{ android_studio_version.stdout | default('Android Studio installation verification failed') }}"

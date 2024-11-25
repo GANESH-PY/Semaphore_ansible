@@ -21,7 +21,8 @@
       ansible.builtin.copy:
         src: "{{ script_src }}"
         dest: /tmp/script.sh
-        mode: "0755"
+        # mode: "0755"
+        mode: "0777"
       when: flag_file.stat.exists == False
 
     - name: Execute script on remote host

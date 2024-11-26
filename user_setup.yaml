@@ -9,7 +9,7 @@
     ansible_become_password: f$us#r@098
     sudo_password: f$us#r@098
     script_src: user_setup.sh
-    hostname_arg: "{{ inventory_hostname }}" 
+    hostname_arg: 192.168.19.143
 
   tasks:
     - name: Check if flag exists

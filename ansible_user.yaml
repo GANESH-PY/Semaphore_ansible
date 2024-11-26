@@ -9,7 +9,7 @@
     ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045"
 
   tasks:
-    - name: Ensure the .ssh directory exists
+    - name: Ensure the .ssh directory exists with correct permissions
       file:
         path: "/home/{{ ansible_user }}/.ssh"
         state: directory
@@ -17,7 +17,7 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
 
-    - name: Ensure authorized_keys file exists
+    - name: Ensure authorized_keys file exists with correct permissions
       file:
         path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
         state: touch
@@ -26,13 +26,12 @@
         group: "{{ ansible_user }}"
 
     - name: Add SSH key to authorized_keys file
-      lineinfile:
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ ssh_key }}"
         path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
-        line: "{{ ssh_key }}"
-        create: yes
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: '0600'
+        manage_dir: yes
 
     - name: Show the result of the authorized_keys file creation
       stat:

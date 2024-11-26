@@ -2,12 +2,12 @@
 - name: Setup users and push ssh key
   hosts: all
   become: True
-  become_user: root
+  become_user: fsuser
   
   vars:
     ansible_password: f$us#r@098
     ansible_become_password: f$us#r@098
-    sudo_password: f$us#r@098
+    sudo_password: finsurge@123
     script_src: user_setup.sh
     hostname_arg: Finsurge_Inventory 
 

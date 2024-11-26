@@ -1,0 +1,30 @@
+---
+- name: Create ansible user with sudo privileges
+  hosts: all
+  become: yes  # Use privilege escalation to perform administrative tasks
+  tasks:
+
+    - name: Create the ansible user
+      user:
+        name: ansible
+        state: present
+        create_home: yes  # Ensure the home directory is created
+        shell: /bin/bash  # Set default shell for the user
+
+    - name: Add ansible user to sudoers group
+      user:
+        name: ansible
+        groups: sudo  # Adds the user to the sudo group (for Ubuntu/Debian systems)
+        append: yes    # Prevents removing other group memberships
+
+    - name: Ensure sudoers file has correct permissions
+      file:
+        path: /etc/sudoers
+        mode: '0440'  # Set secure file permissions for sudoers file
+
+    - name: Allow ansible user to use sudo without a password
+      lineinfile:
+        path: /etc/sudoers
+        regexp: '^ansible'
+        line: 'ansible  ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'  # Validate sudoers file syntax after modification

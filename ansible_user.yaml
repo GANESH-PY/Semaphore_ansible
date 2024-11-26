@@ -1,20 +1,16 @@
 ---
-- name: Create a new user and grant sudo privileges
+- name: Create 'ansible' user and grant sudo privileges
   hosts: all
   become: true  # Use 'sudo' for the following tasks
   tasks:
-    - name: Create the user 'ansible'
-      user:
-        name: ansible
-        state: present
-        shell: /bin/bash
-
-    - name: Set password for user 'ansible'
+    - name: Create the 'ansible' user with password
       user:
         name: ansible
         password: "{{ 'finsurge@123' | password_hash('sha512') }}"
+        shell: /bin/bash
+        state: present
 
-    - name: Add user 'ansible' to the sudo group
+    - name: Add 'ansible' to the sudo group
       user:
         name: ansible
         groups: sudo

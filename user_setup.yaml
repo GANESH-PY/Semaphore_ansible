@@ -3,18 +3,26 @@
   hosts: all
   become: True
   become_user: fsuser
-  
+
   vars:
-    ansible_password: f$us#r@098
-    ansible_become_password: f$us#r@098
     sudo_password: finsurge@123
     script_src: user_setup.sh
     hostname_arg: Finsurge_Inventory 
+    username: fsuser
+    password: finsurge@123  # Password for fsuser
 
   tasks:
+    - name: Ensure the user fsuser exists
+      ansible.builtin.user:
+        name: "{{ username }}"
+        state: present
+        password: "{{ password | password_hash('sha512') }}"  # Ensure password is encrypted
+        shell: /bin/bash
+        create_home: yes
+
     - name: Check if flag exists
       ansible.builtin.stat:
-        path: /home/fsuser/user_setup.completed
+        path: /home/{{ username }}/user_setup.completed
       register: flag_file
 
     - name: Copy custom script to remote host
@@ -31,7 +39,7 @@
 
     - name: Create flag file if script was executed
       ansible.builtin.file:
-        path: /home/fsuser/user_setup.completed
+        path: /home/{{ username }}/user_setup.completed
         state: touch
       when: flag_file.stat.exists == False
 

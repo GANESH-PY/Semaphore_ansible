@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # Exit on error
 
 # Check if full name argument is provided
 if [ -z "$1" ]; then
@@ -14,21 +15,24 @@ password="finsurge@123"
 username=$(echo "$fullname" | cut -d ' ' -f 1 | tr '[:upper:]' '[:lower:]')
 
 # Create user with home directory and set full name for login and username for user
-sudo useradd -m -s /bin/bash -c "$fullname" "$username"
+sudo useradd -m -s /bin/bash -c "$fullname" "$username" || { echo "Failed to create user"; exit 1; }
 
 # Set password for the non_sudo_user
-echo "$username:$password" | sudo chpasswd
+echo "$username:$password" | sudo chpasswd || { echo "Failed to set password"; exit 1; }
 
-#Set fsuser to not require password for sudo
-cat <<EOF > "/etc/sudoers.d/fsuser"
-fsuser  ALL=(ALL)  NOPASSWD: ALL
-EOF
+# Set fsuser to not require password for sudo
+echo "fsuser  ALL=(ALL)  NOPASSWD: ALL" | sudo tee /etc/sudoers.d/fsuser > /dev/null || { echo "Failed to set sudoers"; exit 1; }
 
-#Add ssh key
-mkdir /home/fsuser/.ssh
-touch /home/fsuser/.ssh/authorized_keys
-key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3RWItgvuZK3rVgONZXQ3zlNF1bdn4YfR67RiUVONH9UU9B6+YwCou94y5SOZ+QTR2dWrjS6k8Yh1UDrFKjd9J8dHR4F9hcxw8O5ilfPzhttgDWoMu0Ex+HHMgy+7eOvtZAqqbeLpRocmw/LOJSDcXlRPq/ZTQvvkThjyYjM18TnhURbzDHyUB2cTmhFy8HMpioPaxdYmr7J3brKZoxn7utWayeMDEwqY47ot+exFohf0ZkAHLp5shcdNexlRgVkf2p6gMwsc/KP9tjaOeeR9QKzWYSCROTUUFZMecHnVpaoieDIGmRO5yP5t0hj7HWI0xadm/Nw/bXrtnBMToiEJw0u3H/v6vpBh80oO0xnY4xuOxZAX7TOjnjOKkUvAHEHv4vASw1F2wowFYysN3BIlWmOtP4HJxdi8VJqXlIVH8tO4v/yE8dYTm5KVoohKMX0YiHvxKWgtrF907WBEINOnLVlN0E0GjvU3fiDaSkpSfyQolgvtMhdj2/07IeAXwOuLhd4ZWkdxy67iJ5Qdyc42JeTG1sx1sUUAF4BZNf+s64aK9jsky2hX9yxKhMcmydsS3bLYHCsaEiKNyuVcC2nyWdOj6xqKlsLsmayJer3F4VjwxelSNp1MzArvXz+vds2DXk5+wT0WavkmaSMihnblTSyTli9TpKm2LOFUYfnAsgw== fsuser@FS-SRV-IN-04"
-chmod 700 /home/fsuser/.ssh/
+# Add ssh key
+mkdir -p /home/fsuser/.ssh || { echo "Failed to create .ssh directory"; exit 1; }
+chmod 700 /home/fsuser/.ssh
+
+touch /home/fsuser/.ssh/authorized_keys || { echo "Failed to create authorized_keys"; exit 1; }
 chmod 600 /home/fsuser/.ssh/authorized_keys
-echo $key > /home/fsuser/.ssh/authorized_keys
-chown -R fsuser:fsuser /home/fsuser/.ssh
+
+key="ssh-rsa AAAAB3Nza...fsuser@FS-SRV-IN-04"
+echo $key > /home/fsuser/.ssh/authorized_keys || { echo "Failed to write SSH key"; exit 1; }
+
+chown -R fsuser:fsuser /home/fsuser/.ssh || { echo "Failed to set ownership"; exit 1; }
+
+echo "User setup complete"

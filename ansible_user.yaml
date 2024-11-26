@@ -1,48 +1,50 @@
 ---
 - name: Create ansible user and configure SSH access
-  hosts: all
+  hosts: Devops
   become: true
   become_user: root
-
   vars:
-    username: "ansible"
-    public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOMlJVvLi05BidwKrVB+ZkNrhD0FSYnXMgdv+KY7tzK/2s7cUv46tL/SsRShF3k/oGGsIIMemiSY7udL8lHYZJSxSBa5HAwMaxsRf8LZUxKLLSSf7unn14bkASLZvqlk55ZZYG87HySoAqtLI6uFbTDa63vueAr/gqaA65C824JJPDW1r8PeJXxhQE7kK3qNZV09ukHjav0ye/pNlE9ZkBhcSXYQejSTcd6efEcArnFGctbMiBYsp0is3Jrupj44F7pI6tLx/7/9U+/d4PY9vmWi99nRZmdFRfzwN5hfWRevOmzCJ1Wlb0E5Ge9BD1Rd+lvLHMilWUyXw6lHaqgDMVc5QiOSIsx8Awv55Y6tTZBG8u/PhUTQsdg0yAZz4aw7eYC7S3dgqX632IrQbsH0ZsLUsQNfH68tNpg8Dh1PLMCViI8B0EHZtHCu/gdQ+31P9NtR2Tw4iF/A3XoK0SjfYFexo5yInLZLk4CeU1iZymTv+rZ8kR01RKBCwKD2pgl40= fsuser@mail"
+    ansible_user_name: ansible
+    ansible_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOMlJVvLi05BidwKrVB+ZkNrhD0FSYnXMgdv+KY7tzK/2s7cUv46tL/SsRShF3k/oGGsIIMemiSY7udL8lHYZJSxSBa5HAwMaxsRf8LZUxKLLSSf7unn14bkASLZvqlk55ZZYG87HySoAqtLI6uFbTDa63vueAr/gqaA65C824JJPDW1r8PeJXxhQE7kK3qNZV09ukHjav0ye/pNlE9ZkBhcSXYQejSTcd6efEcArnFGctbMiBYsp0is3Jrupj44F7pI6tLx/7/9U+/d4PY9vmWi99nRZmdFRfzwN5hfWRevOmzCJ1Wlb0E5Ge9BD1Rd+lvLHMilWUyXw6lHaqgDMVc5QiOSIsx8Awv55Y6tTZBG8u/PhUTQsdg0yAZz4aw7eYC7S3dgqX632IrQbsH0ZsLUsQNfH68tNpg8Dh1PLMCViI8B0EHZtHCu/gdQ+31P9NtR2Tw4iF/A3XoK0SjfYFexo5yInLZLk4CeU1iZymTv+rZ8kR01RKBCwKD2pgl40= fsuser@mail"
 
   tasks:
-    - name: Create the user ansible
+    - name: Ensure the user 'ansible' exists
       ansible.builtin.user:
-        name: "{{ username }}"
+        name: "{{ ansible_user_name }}"
         state: present
+        password: "{{ 'ansible_password' | password_hash('sha512') }}"  # Optional, can be used if you want to set a password
         shell: /bin/bash
         create_home: yes
 
-    - name: Add ansible user to sudo group
+    - name: Add 'ansible' user to sudo group
       ansible.builtin.user:
-        name: "{{ username }}"
-        groups: sudo
+        name: "{{ ansible_user_name }}"
+        group: sudo
         append: yes
+        state: present
 
     - name: Ensure .ssh directory exists for ansible user
       ansible.builtin.file:
-        path: "/home/{{ username }}/.ssh"
+        path: "/home/{{ ansible_user_name }}/.ssh"
         state: directory
         mode: '0700'
-        owner: "{{ username }}"
-        group: "{{ username }}"
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
 
     - name: Add SSH public key to authorized_keys for ansible user
       ansible.builtin.authorized_key:
-        user: "{{ username }}"
+        user: "{{ ansible_user_name }}"
         state: present
-        key: "{{ public_key }}"
-        path: "/home/{{ username }}/.ssh/authorized_keys"
-        owner: "{{ username }}"
-        group: "{{ username }}"
+        key: "{{ ansible_ssh_key }}"
+        path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
         mode: '0600'
 
-    - name: Ensure the ansible user can use sudo without password
+    - name: Ensure the user has sudo privileges
       ansible.builtin.lineinfile:
         path: /etc/sudoers
-        line: "{{ username }} ALL=(ALL) NOPASSWD: ALL"
+        regexp: '^{{ ansible_user_name }}'
+        line: '{{ ansible_user_name }} ALL=(ALL) NOPASSWD: ALL'
+        state: present
         validate: '/usr/sbin/visudo -cf %s'
-

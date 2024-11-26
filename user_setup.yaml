@@ -2,7 +2,7 @@
 - name: Setup users and push ssh key
   hosts: all
   become: True
-  become_user: root
+  become_user: fsuser
   
   vars:
     ansible_password: f$us#r@098

@@ -16,11 +16,10 @@
         shell: /bin/bash
         state: present
         create_home: true
+        groups: sudo
 
-    - name: Wait for the system to recognize ansible user
-      wait_for:
-        path: /home/ansible
-        timeout: 10
+    - name: Debug user existence
+      command: getent passwd ansible
 
     - name: Set ownership of ansible home directory
       file:
@@ -29,6 +28,11 @@
         group: ansible
         state: directory
         recurse: true
+
+    - name: Wait for the system to recognize ansible user
+      wait_for:
+        path: /home/ansible
+        timeout: 10
 
     - name: Create .ssh directory for ansible user
       file:

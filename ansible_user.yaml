@@ -29,6 +29,10 @@
         path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
       register: auth_key_stat
 
+    - name: Show the result of stat
+      debug:
+        var: auth_key_stat
+
     - name: Ensure authorized_keys file exists
       file:
         path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
@@ -45,10 +49,6 @@
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
       when: auth_key_stat.stat.exists == true
-
-    - name: Show the result of stat
-      debug:
-        var: auth_key_stat
 
     - name: Debug the contents of authorized_keys
       command: cat /home/{{ ansible_user }}/.ssh/authorized_keys

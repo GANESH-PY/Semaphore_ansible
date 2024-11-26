@@ -1,17 +1,24 @@
 ---
-- name: Create 'ansible' user and grant sudo privileges
+- name: Become fsuser, create ansible user and give sudo privileges
   hosts: all
-  become: true  # Use 'sudo' for the following tasks
+  become: true
+  become_user: fsuser  # Become fsuser user
   tasks:
-    - name: Create the 'ansible' user with password
+    - name: Create ansible user
       user:
-        name: ansible
-        password: "{{ 'finsurge@123' | password_hash('sha512') }}"
-        shell: /bin/bash
+        name: ansible_user
         state: present
+        shell: /bin/bash
 
-    - name: Add 'ansible' to the sudo group
+    - name: Set password for ansible user
       user:
-        name: ansible
-        groups: sudo
-        append: yes
+        name: ansible_user
+        password: "{{ 'ansible_password' | password_hash('sha512') }}"
+
+    - name: Add ansible user to sudoers file
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^ansible_user'
+        line: 'ansible_user ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'

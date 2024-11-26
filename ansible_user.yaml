@@ -2,6 +2,10 @@
 - name: Copy SSH public key to remote user
   hosts: all
   become: yes  # Use privilege escalation if needed
+  vars:
+    ansible_user: "root"  # SSH username
+    ansible_ssh_pass: "f$us#r@098"  # SSH password
+
   tasks:
 
     - name: Ensure the remote user's .ssh directory exists

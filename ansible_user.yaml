@@ -36,6 +36,13 @@
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
   tasks:
+    - name: Ensure the .ssh directory exists
+      file:
+        path: "/home/{{ ansible_user }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
 
     - name: Copy the SSH public key to the remote user's authorized_keys
       authorized_key:
@@ -64,4 +71,3 @@
       debug:
         var: authorized_keys_contents.stdout
       when: auth_key_stat.stat.exists
-

@@ -8,7 +8,6 @@
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
   tasks:
-
     - name: Copy the SSH public key to the remote user's authorized_keys
       authorized_key:
         user: "{{ ansible_user }}"
@@ -29,6 +28,15 @@
     - name: Show the result of stat (file existence check)
       debug:
         var: authorized_key_exists
+
+    - name: Ensure authorized_keys file exists
+      file:
+        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        state: touch
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
+      when: not authorized_key_exists
 
     - name: Debug the contents of authorized_keys
       command: cat /home/{{ ansible_user }}/.ssh/authorized_keys

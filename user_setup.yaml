@@ -16,7 +16,7 @@
       ansible.builtin.user:
         name: "{{ username }}"
         state: present
-        password: "{{ password | password_hash('sha512') }}"  # Ensure password is encrypted
+        password: finsurge@123  # Ensure password is encrypted
         shell: /bin/bash
         create_home: yes
 
@@ -30,21 +30,17 @@
         src: "{{ script_src }}"
         dest: /tmp/script.sh
         mode: "0755"
-      # when: flag_file.stat.exists == False
 
     - name: Execute script on remote host
       ansible.builtin.command:
         cmd: /tmp/script.sh "{{ hostname_arg }}"
-      # when: flag_file.stat.exists == False
 
     - name: Create flag file if script was executed
       ansible.builtin.file:
         path: /home/{{ username }}/user_setup.completed
         state: touch
-      # when: flag_file.stat.exists == False
 
     - name: Delete script from remote host
       ansible.builtin.file:
         path: /tmp/script.sh
         state: absent
-      when: flag_file.stat.exists == False

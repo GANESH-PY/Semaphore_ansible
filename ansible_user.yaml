@@ -8,12 +8,17 @@
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"  # Disable host key checking
 
   tasks:
+    - name: Check if snapd is already installed
+      command: which snap
+      register: snap_installed
+      failed_when: false
+
     - name: Install Snapd if not already installed
       apt:
         name: snapd
         state: present
         update_cache: yes
-      when: ansible_facts.packages.snapd is not defined
+      when: snap_installed.stdout == ""
 
     - name: Install Postman using Snap
       snap:

@@ -1,30 +1,22 @@
 ---
-- name: Create ansible user with sudo privileges
+- name: Copy SSH public key to remote user
   hosts: all
-  become: yes  # Use privilege escalation to perform administrative tasks
+  become: yes  # Use privilege escalation if needed
   tasks:
 
-    - name: Create the ansible user
-      user:
-        name: ansible
-        state: present
-        create_home: yes  # Ensure the home directory is created
-        shell: /bin/bash  # Set default shell for the user
-
-    - name: Add ansible user to sudoers group
-      user:
-        name: ansible
-        groups: sudo  # Adds the user to the sudo group (for Ubuntu/Debian systems)
-        append: yes    # Prevents removing other group memberships
-
-    - name: Ensure sudoers file has correct permissions
+    - name: Ensure the remote user's .ssh directory exists
       file:
-        path: /etc/sudoers
-        mode: '0440'  # Set secure file permissions for sudoers file
+        path: "/home/{{ ansible_user }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
 
-    - name: Allow ansible user to use sudo without a password
-      lineinfile:
-        path: /etc/sudoers
-        regexp: '^ansible'
-        line: 'ansible  ALL=(ALL) NOPASSWD: ALL'
-        validate: '/usr/sbin/visudo -cf %s'  # Validate sudoers file syntax after modification
+    - name: Copy the SSH public key to the remote user's authorized_keys
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', '/path/to/your/public_key.pub') }}"
+        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        manage_dir: yes
+        mode: '0600'

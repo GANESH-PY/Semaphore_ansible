@@ -9,19 +9,21 @@
     public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3RWItgvuZK3rVgONZXQ3zlNF1bdn4YfR67RiUVONH9UU9B6+YwCou94y5SOZ+QTR2dWrjS6k8Yh1UDrFKjd9J8dHR4F9hcxw8O5ilfPzhttgDWoMu0Ex+HHMgy+7eOvtZAqqbeLpRocmw/LOJSDcXlRPq/ZTQvvkThjyYjM18TnhURbzDHyUB2cTmhFy8HMpioPaxdYmr7J3brKZoxn7utWayeMDEwqY47ot+exFohf0ZkAHLp5shcdNexlRgVkf2p6gMwsc/KP9tjaOeeR9QKzWYSCROTUUFZMecHnVpaoieDIGmRO5yP5t0hj7HWI0xadm/Nw/bXrtnBMToiEJw0u3H/v6vpBh80oO0xnY4xuOxZAX7TOjnjOKkUvAHEHv4vASw1F2wowFYysN3BIlWmOtP4HJxdi8VJqXlIVH8tO4v/yE8dYTm5KVoohKMX0YiHvxKWgtrF907WBEINOnLVlN0E0GjvU3fiDaSkpSfyQolgvtMhdj2/07IeAXwOuLhd4ZWkdxy67iJ5Qdyc42JeTG1sx1sUUAF4BZNf+s64aK9jsky2hX9yxKhMcmydsS3bLYHCsaEiKNyuVcC2nyWdOj6xqKlsLsmayJer3F4VjwxelSNp1MzArvXz+vds2DXk5+wT0WavkmaSMihnblTSyTli9TpKm2LOFUYfnAsgw== fsuser@FS-SRV-IN-04"
 
   tasks:
-    - name: Ensure the 'fsuser' can log in
-      vars:
-        ansible_user: "{{ remote_user }}"
-        ansible_password: "{{ remote_user_password }}"
-      ansible.builtin.ping:
-
-    - name: Create ansible user with password
+    - name: Ensure ansible user exists
       user:
         name: ansible
         password: "{{ ansible_user_password | password_hash('sha512') }}"
         shell: /bin/bash
         state: present
         create_home: true
+
+    - name: Set ownership of ansible home directory
+      file:
+        path: /home/ansible
+        owner: ansible
+        group: ansible
+        state: directory
+        recurse: true
 
     - name: Create .ssh directory for ansible user
       file:
@@ -39,6 +41,6 @@
         group: ansible
         mode: '0600'
 
-    - name: Verify authorized_keys content
+    - name: Verify SSH configuration
       debug:
         msg: "Public key successfully copied to /home/ansible/.ssh/authorized_keys"

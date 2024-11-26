@@ -17,6 +17,11 @@
         state: present
         create_home: true
 
+    - name: Wait for the system to recognize ansible user
+      wait_for:
+        path: /home/ansible
+        timeout: 10
+
     - name: Set ownership of ansible home directory
       file:
         path: /home/ansible

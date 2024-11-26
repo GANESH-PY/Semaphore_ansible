@@ -1,23 +1,12 @@
 ---
-- name: Setup SSH public key and install Postman
+- name: Install Postman via Snap
   hosts: all
   become: yes
   vars:
     ansible_user: "fsuser"  # SSH username
     ansible_ssh_pass: "f$us#r@098"  # SSH password
-    ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
   tasks:
-    # Step 1: Copy the SSH public key to the remote user's authorized_keys
-    - name: Copy the SSH public key to the remote user's authorized_keys
-      authorized_key:
-        user: "{{ ansible_user }}"
-        state: present
-        key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045"
-        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
-        manage_dir: yes
-
-    # Step 2: Install Snapd if it's not already installed
     - name: Install Snapd if not already installed
       apt:
         name: snapd
@@ -25,19 +14,16 @@
         update_cache: yes
       when: ansible_facts.packages.snapd is not defined
 
-    # Step 3: Install Postman using Snap
     - name: Install Postman using Snap
       snap:
         name: postman
         state: present
 
-    # Step 4: Verify Postman installation
     - name: Verify Postman Installation
       command: postman --version
       register: postman_version
       failed_when: postman_version.rc != 0
 
-    # Step 5: Show Postman version
     - name: Show Postman version
       debug:
         var: postman_version.stdout

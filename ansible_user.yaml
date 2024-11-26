@@ -63,5 +63,5 @@
     - name: Show contents of authorized_keys
       debug:
         var: authorized_keys_contents.stdout
-        when: auth_key_stat.stat.exists
+      when: auth_key_stat.stat.exists
 

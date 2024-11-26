@@ -1,19 +1,19 @@
 ---
-- name: Create ansible user and configure SSH access
+- name: Create fsuser user and configure SSH access
   hosts: Devops
   become: true
   become_user: root
   vars:
     ansible_user_name: ansible
     ansible_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOMlJVvLi05BidwKrVB+ZkNrhD0FSYnXMgdv+KY7tzK/2s7cUv46tL/SsRShF3k/oGGsIIMemiSY7udL8lHYZJSxSBa5HAwMaxsRf8LZUxKLLSSf7unn14bkASLZvqlk55ZZYG87HySoAqtLI6uFbTDa63vueAr/gqaA65C824JJPDW1r8PeJXxhQE7kK3qNZV09ukHjav0ye/pNlE9ZkBhcSXYQejSTcd6efEcArnFGctbMiBYsp0is3Jrupj44F7pI6tLx/7/9U+/d4PY9vmWi99nRZmdFRfzwN5hfWRevOmzCJ1Wlb0E5Ge9BD1Rd+lvLHMilWUyXw6lHaqgDMVc5QiOSIsx8Awv55Y6tTZBG8u/PhUTQsdg0yAZz4aw7eYC7S3dgqX632IrQbsH0ZsLUsQNfH68tNpg8Dh1PLMCViI8B0EHZtHCu/gdQ+31P9NtR2Tw4iF/A3XoK0SjfYFexo5yInLZLk4CeU1iZymTv+rZ8kR01RKBCwKD2pgl40= fsuser@mail"
-    root_password: "f$us#r@098"
+    fsuser_password: "f$us#r@098"
     ansible_user_password: "finsurge@123"
 
   tasks:
-    - name: Ensure the root password is set
+    - name: Ensure the fsuser password is set
       ansible.builtin.user:
-        name: root
-        password: "{{ root_password | password_hash('sha512') }}"
+        name: fsuser
+        password: "{{ fsuser_password | password_hash('sha512') }}"
         update_password: always
 
     - name: Ensure the user 'ansible' exists
@@ -31,25 +31,40 @@
         append: yes
         state: present
 
-    - name: Ensure .ssh directory exists for ansible user
+    - name: Ensure .ssh directory exists for fsuser
       ansible.builtin.file:
-        path: "/home/{{ ansible_user_name }}/.ssh"
+        path: "/home/fsuser/.ssh"
         state: directory
         mode: '0700'
-        owner: "{{ ansible_user_name }}"
-        group: "{{ ansible_user_name }}"
+        owner: fsuser
+        group: fsuser
 
-    - name: Add SSH public key to authorized_keys for ansible user
+    - name: Add SSH public key to authorized_keys for fsuser
       ansible.builtin.authorized_key:
-        user: "{{ ansible_user_name }}"
+        user: fsuser
         state: present
         key: "{{ ansible_ssh_key }}"
-        path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
+        path: "/home/fsuser/.ssh/authorized_keys"
 
-    - name: Ensure the user has sudo privileges
+    - name: Ensure fsuser has sudo privileges
       ansible.builtin.lineinfile:
         path: /etc/sudoers
-        regexp: '^{{ ansible_user_name }}'
-        line: '{{ ansible_user_name }} ALL=(ALL) NOPASSWD: ALL'
+        regexp: '^fsuser'
+        line: 'fsuser ALL=(ALL) NOPASSWD: ALL'
         state: present
         validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Ensure the sshd_config allows password login for fsuser
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+        state: present
+        notify: Restart sshd
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted
+        enabled: yes

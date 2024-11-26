@@ -31,20 +31,20 @@
         append: yes
         state: present
 
-    - name: Ensure .ssh directory exists for fsuser
+    - name: Ensure .ssh directory exists for ansible user
       ansible.builtin.file:
-        path: "/home/fsuser/.ssh"
+        path: "/home/{{ ansible_user_name }}/.ssh"
         state: directory
         mode: '0700'
-        owner: fsuser
-        group: fsuser
+        owner: "{{ ansible_user_name }}"
+        group: "{{ ansible_user_name }}"
 
-    - name: Add SSH public key to authorized_keys for fsuser
+    - name: Add SSH public key to authorized_keys for ansible user
       ansible.builtin.authorized_key:
-        user: fsuser
+        user: "{{ ansible_user_name }}"
         state: present
         key: "{{ ansible_ssh_key }}"
-        path: "/home/fsuser/.ssh/authorized_keys"
+        path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
 
     - name: Ensure fsuser has sudo privileges
       ansible.builtin.lineinfile:
@@ -54,7 +54,7 @@
         state: present
         validate: '/usr/sbin/visudo -cf %s'
 
-    - name: Ensure the sshd_config allows password login for fsuser
+    - name: Ensure the sshd_config allows password login for ansible user
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#PasswordAuthentication'
@@ -66,3 +66,12 @@
         name: sshd
         state: restarted
         enabled: yes
+
+    - name: Debug output for authorized_keys file
+      ansible.builtin.stat:
+        path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
+      register: authorized_keys_stat
+
+    - name: Display the stat result for authorized_keys
+      ansible.builtin.debug:
+        var: authorized_keys_stat.stat

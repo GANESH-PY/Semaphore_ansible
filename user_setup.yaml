@@ -16,7 +16,7 @@
       ansible.builtin.user:
         name: "{{ username }}"
         state: present
-        password: finsurge@123  # Ensure password is encrypted
+        password: "{{ password | password_hash('sha512') }}"  # Ensure password is encrypted
         shell: /bin/bash
         create_home: yes
 

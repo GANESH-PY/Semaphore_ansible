@@ -1,0 +1,54 @@
+---
+- name: Installing Intellij
+  hosts: all
+  become: True
+  gather_facts: False
+  
+  vars:
+    intellij_download_link: "https://download-cdn.jetbrains.com/idea/ideaIC-2024.1.1.tar.gz"
+    intellij_installation_path: /opt
+
+  tasks:
+    - name: Downloading IntelliJ tarball
+      get_url:
+        url: "{{ intellij_download_link }}"
+        dest: "/tmp/idea.tar.gz"
+
+    - name: Ensure the destination directory exists
+      ansible.builtin.file:
+        path: "{{ intellij_installation_path }}/idea-IC"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Extract the tar.gz file
+      ansible.builtin.command: tar -xzf /tmp/idea.tar.gz -C "{{ intellij_installation_path }}/idea-IC"
+
+
+    - name: Change directory to IntelliJ bin
+      ansible.builtin.shell: |
+        cd /opt/idea-IC
+        cd $(ls -d */)
+        cd bin
+
+    - name: Store bin path in a variable
+      ansible.builtin.shell: pwd
+      register: intellij_bin_dir
+
+    - name: Create dektop entry
+      ansible.builtin.shell: |
+        touch /usr/share/applications/intellij.desktop
+        cat <<EOF > /usr/share/applications/intellij.desktop
+        [Desktop Entry]
+        Version=1.0
+        Type=Application
+        Name=IntelliJ IDEA Community Edition
+        Icon=/opt/idea-IC/idea-IC-241.15989.150/bin/idea.svg
+        Exec="/opt/idea-IC/idea-IC-241.15989.150/bin/idea.sh" %f
+        Comment=Capable and Ergonomic IDE for JVM
+        Categories=Development;IDE;
+        Terminal=false
+        StartupWMClass=jetbrains-idea-ce
+        StartupNotify=true 
+        EOF

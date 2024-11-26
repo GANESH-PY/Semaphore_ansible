@@ -24,4 +24,3 @@
         key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045"
         path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
         manage_dir: yes
-        mode: '0600'

@@ -8,8 +8,8 @@
     ansible_password: f$us#r@098
     ansible_become_password: f$us#r@098
     sudo_password: f$us#r@098
-    script_src: /ansible/scripts/user_setup.sh
-    hostname_arg: "{{ inventory_hostname }}" 
+    script_src: user_setup.sh
+    hostname_arg: Finsurge_Inventory 
 
   tasks:
     - name: Check if flag exists

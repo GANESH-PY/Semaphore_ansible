@@ -2,15 +2,14 @@
 - name: Setup users and push ssh key
   hosts: all
   become: True
-  become_user: fsuser
-
+  become_user: root
+  
   vars:
     ansible_password: f$us#r@098
     ansible_become_password: f$us#r@098
     sudo_password: f$us#r@098
-    script_src: user_setup.sh
-    hostname_arg: FS-DEV-L-IN-42  # This is likely the host or the argument for full name
-    username: fsuser  # Define the username directly (ensure it's consistent with your script)
+    script_src: /ansible/scripts/user_setup.sh
+    hostname_arg: "{{ inventory_hostname }}" 
 
   tasks:
     - name: Check if flag exists
@@ -27,7 +26,7 @@
 
     - name: Execute script on remote host
       ansible.builtin.command:
-        cmd: /tmp/script.sh "{{ hostname_arg }} {{ username }}"
+        cmd: /tmp/script.sh "{{ hostname_arg }}"
       when: flag_file.stat.exists == False
 
     - name: Create flag file if script was executed
@@ -36,10 +35,8 @@
         state: touch
       when: flag_file.stat.exists == False
 
-    - name: Debug flag file status
-      debug:
-        msg: "Flag file exists: {{ flag_file.stat.exists }}"
-
-    - name: Debug user setup status
-      debug:
-        msg: "User setup complete for: {{ username }}"
+    - name: Delete script from remote host
+      ansible.builtin.file:
+        path: /tmp/script.sh
+        state: absent
+      when: flag_file.stat.exists == False

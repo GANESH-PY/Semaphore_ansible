@@ -1,0 +1,13 @@
+---
+- name: Installing dbeaver
+  hosts: all
+  become: true
+  gather_facts: False
+
+  tasks:
+  
+    - name: Download snap version of dbeaver
+      ansible.builtin.shell: snap install dbeaver-ce
+      args:
+       creates: "/snap/bin/dbeaver-ce"
+      ignore_errors: true

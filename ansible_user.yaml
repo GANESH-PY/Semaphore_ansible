@@ -60,10 +60,8 @@
         regexp: '^#PasswordAuthentication'
         line: 'PasswordAuthentication yes'
         state: present
-        notify: Restart sshd
 
-  handlers:
-    - name: Restart sshd
+    - name: Restart sshd service to apply changes
       ansible.builtin.systemd:
         name: sshd
         state: restarted

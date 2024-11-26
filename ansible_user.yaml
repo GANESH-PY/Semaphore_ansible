@@ -44,9 +44,6 @@
         state: present
         key: "{{ ansible_ssh_key }}"
         path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
-        owner: "{{ ansible_user_name }}"
-        group: "{{ ansible_user_name }}"
-        mode: '0600'
 
     - name: Ensure the user has sudo privileges
       ansible.builtin.lineinfile:

@@ -1,77 +1,39 @@
 ---
-- name: Create fsuser user and configure SSH access
-  hosts: Devops
+- name: Setup user 'ansible' with SSH access
+  hosts: all
   become: true
-  become_user: root
   vars:
-    ansible_user_name: ansible
-    ansible_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOMlJVvLi05BidwKrVB+ZkNrhD0FSYnXMgdv+KY7tzK/2s7cUv46tL/SsRShF3k/oGGsIIMemiSY7udL8lHYZJSxSBa5HAwMaxsRf8LZUxKLLSSf7unn14bkASLZvqlk55ZZYG87HySoAqtLI6uFbTDa63vueAr/gqaA65C824JJPDW1r8PeJXxhQE7kK3qNZV09ukHjav0ye/pNlE9ZkBhcSXYQejSTcd6efEcArnFGctbMiBYsp0is3Jrupj44F7pI6tLx/7/9U+/d4PY9vmWi99nRZmdFRfzwN5hfWRevOmzCJ1Wlb0E5Ge9BD1Rd+lvLHMilWUyXw6lHaqgDMVc5QiOSIsx8Awv55Y6tTZBG8u/PhUTQsdg0yAZz4aw7eYC7S3dgqX632IrQbsH0ZsLUsQNfH68tNpg8Dh1PLMCViI8B0EHZtHCu/gdQ+31P9NtR2Tw4iF/A3XoK0SjfYFexo5yInLZLk4CeU1iZymTv+rZ8kR01RKBCwKD2pgl40= fsuser@mail"
-    fsuser_password: "f$us#r@098"
+    remote_user: fsuser
+    remote_user_password: "f$us#r@098"
     ansible_user_password: "finsurge@123"
-
+    public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3RWItgvuZK3rVgONZXQ3zlNF1bdn4YfR67RiUVONH9UU9B6+YwCou94y5SOZ+QTR2dWrjS6k8Yh1UDrFKjd9J8dHR4F9hcxw8O5ilfPzhttgDWoMu0Ex+HHMgy+7eOvtZAqqbeLpRocmw/LOJSDcXlRPq/ZTQvvkThjyYjM18TnhURbzDHyUB2cTmhFy8HMpioPaxdYmr7J3brKZoxn7utWayeMDEwqY47ot+exFohf0ZkAHLp5shcdNexlRgVkf2p6gMwsc/KP9tjaOeeR9QKzWYSCROTUUFZMecHnVpaoieDIGmRO5yP5t0hj7HWI0xadm/Nw/bXrtnBMToiEJw0u3H/v6vpBh80oO0xnY4xuOxZAX7TOjnjOKkUvAHEHv4vASw1F2wowFYysN3BIlWmOtP4HJxdi8VJqXlIVH8tO4v/yE8dYTm5KVoohKMX0YiHvxKWgtrF907WBEINOnLVlN0E0GjvU3fiDaSkpSfyQolgvtMhdj2/07IeAXwOuLhd4ZWkdxy67iJ5Qdyc42JeTG1sx1sUUAF4BZNf+s64aK9jsky2hX9yxKhMcmydsS3bLYHCsaEiKNyuVcC2nyWdOj6xqKlsLsmayJer3F4VjwxelSNp1MzArvXz+vds2DXk5+wT0WavkmaSMihnblTSyTli9TpKm2LOFUYfnAsgw== fsuser@FS-SRV-IN-04"
   tasks:
-    - name: Ensure the fsuser password is set
-      ansible.builtin.user:
-        name: fsuser
-        password: "{{ fsuser_password | password_hash('sha512') }}"
-        update_password: always
+    - name: Ensure the 'fsuser' can log in using password
+      vars:
+        ansible_user: "{{ remote_user }}"
+        ansible_password: "{{ remote_user_password }}"
+      ansible.builtin.ping:
 
-    - name: Ensure the user 'ansible' exists
-      ansible.builtin.user:
-        name: "{{ ansible_user_name }}"
-        state: present
+    - name: Create 'ansible' user
+      user:
+        name: ansible
         password: "{{ ansible_user_password | password_hash('sha512') }}"
         shell: /bin/bash
-        create_home: yes
-
-    - name: Add 'ansible' user to sudo group
-      ansible.builtin.user:
-        name: "{{ ansible_user_name }}"
-        group: sudo
-        append: yes
         state: present
+        create_home: true
 
-    - name: Ensure .ssh directory exists for ansible user
-      ansible.builtin.file:
-        path: "/home/{{ ansible_user_name }}/.ssh"
+    - name: Create .ssh directory for 'ansible'
+      file:
+        path: /home/ansible/.ssh
         state: directory
-        mode: '0700'
-        owner: "{{ ansible_user_name }}"
-        group: "{{ ansible_user_name }}"
+        owner: ansible
+        group: ansible
+        mode: 0700
 
-    - name: Add SSH public key to authorized_keys for ansible user
-      ansible.builtin.authorized_key:
-        user: "{{ ansible_user_name }}"
-        state: present
-        key: "{{ ansible_ssh_key }}"
-        path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
-
-    - name: Ensure fsuser has sudo privileges
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers
-        regexp: '^fsuser'
-        line: 'fsuser ALL=(ALL) NOPASSWD: ALL'
-        state: present
-        validate: '/usr/sbin/visudo -cf %s'
-
-    - name: Ensure the sshd_config allows password login for ansible user
-      ansible.builtin.lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^#PasswordAuthentication'
-        line: 'PasswordAuthentication yes'
-        state: present
-
-    - name: Restart sshd service to apply changes
-      ansible.builtin.systemd:
-        name: sshd
-        state: restarted
-        enabled: yes
-
-    - name: Debug output for authorized_keys file
-      ansible.builtin.stat:
-        path: "/home/{{ ansible_user_name }}/.ssh/authorized_keys"
-      register: authorized_keys_stat
-
-    - name: Display the stat result for authorized_keys
-      ansible.builtin.debug:
-        var: authorized_keys_stat.stat
+    - name: Copy public key to authorized_keys
+      copy:
+        content: "{{ public_key }}"
+        dest: /home/ansible/.ssh/authorized_keys
+        owner: ansible
+        group: ansible
+        mode: 0600

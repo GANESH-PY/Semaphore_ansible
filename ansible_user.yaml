@@ -3,8 +3,8 @@
   hosts: all
   become: yes
   vars:
-    ansible_user: "fsuser"  # SSH username
-    ansible_ssh_pass: "f$us#r@098"  # SSH password
+    ansible_user: "ganesh"  # SSH username
+    ansible_ssh_pass: "1"  # SSH password
     ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
   tasks:

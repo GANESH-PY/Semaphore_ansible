@@ -3,7 +3,7 @@
   hosts: all
   become: True
   become_user: fsuser
-  
+
   vars:
     ansible_password: f$us#r@098
     ansible_become_password: f$us#r@098
@@ -34,9 +34,11 @@
         path: /home/fsuser/user_setup.completed
         state: touch
       when: flag_file.stat.exists == False
+      
+    - name: Debug flag file status
+      debug:
+        msg: "Flag file exists: {{ flag_file.stat.exists }}"
 
-    - name: Delete flag file after execution (to allow script to run again)
-      ansible.builtin.file:
-        path: /home/fsuser/user_setup.completed
-        state: absent
-      when: flag_file.stat.exists == True
+    - name: Debug user setup status
+      debug:
+        msg: "User setup complete for: {{ username }}"

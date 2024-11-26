@@ -9,7 +9,8 @@
     ansible_become_password: f$us#r@098
     sudo_password: f$us#r@098
     script_src: user_setup.sh
-    hostname_arg: 192.168.19.143
+    hostname_arg: 192.168.19.143  # This is likely the host or the argument for full name
+    username: fsuser  # Define the username directly (ensure it's consistent with your script)
 
   tasks:
     - name: Check if flag exists
@@ -26,7 +27,7 @@
 
     - name: Execute script on remote host
       ansible.builtin.command:
-        cmd: /tmp/script.sh "{{ hostname_arg }}"
+        cmd: /tmp/script.sh "{{ hostname_arg }} {{ username }}"
       when: flag_file.stat.exists == False
 
     - name: Create flag file if script was executed
@@ -34,7 +35,7 @@
         path: /home/fsuser/user_setup.completed
         state: touch
       when: flag_file.stat.exists == False
-      
+
     - name: Debug flag file status
       debug:
         msg: "Flag file exists: {{ flag_file.stat.exists }}"

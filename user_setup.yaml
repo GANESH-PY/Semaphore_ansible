@@ -17,28 +17,26 @@
         path: /home/fsuser/user_setup.completed
       register: flag_file
 
-    # Force copy the script every time
     - name: Copy custom script to remote host
       ansible.builtin.copy:
         src: "{{ script_src }}"
         dest: /tmp/script.sh
         mode: "0755"
-      #when: flag_file.stat.exists == False  # Only copy if flag does not exist
+      when: flag_file.stat.exists == False
 
     - name: Execute script on remote host
       ansible.builtin.command:
         cmd: /tmp/script.sh "{{ hostname_arg }}"
-      when: flag_file.stat.exists == False  # Only execute if flag does not exist
+      when: flag_file.stat.exists == False
 
     - name: Create flag file if script was executed
       ansible.builtin.file:
         path: /home/fsuser/user_setup.completed
         state: touch
-      when: flag_file.stat.exists == False  # Only create if flag does not exist
+      when: flag_file.stat.exists == False
 
-
-    # - name: Delete script from remote host
-    #   ansible.builtin.file:
-    #     path: /tmp/script.sh
-    #     state: absent
-    #   when: flag_file.stat.exists == False
+    - name: Delete flag file after execution (to allow script to run again)
+      ansible.builtin.file:
+        path: /home/fsuser/user_setup.completed
+        state: absent
+      when: flag_file.stat.exists == True

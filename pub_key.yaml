@@ -1,8 +1,35 @@
 ---
-- name: Copy SSH key to remote host
-  hosts: your_host_group  # Replace with the actual host group or IP address
+- name: Manage user, sudoers, and SSH key
+  hosts: all
   become: yes
+  vars:
+    full_name: "fsuser"  # Replace with the full name or pass as extra var
+    default_password: "f$us#r@098"  # Replace with your desired password
+    ssh_key: >
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3RWItgvuZK3rVgONZXQ3zlNF1bdn4YfR67RiUVONH9UU9B6+YwCou94y5SOZ+QTR2dWrjS6k8Yh1UDrFKjd9J8dHR4F9hcxw8O5ilfPzhttgDWoMu0Ex+HHMgy+7eOvtZAqqbeLpRocmw/LOJSDcXlRPq/ZTQvvkThjyYjM18TnhURbzDHyUB2cTmhFy8HMpioPaxdYmr7J3brKZoxn7utWayeMDEwqY47ot+exFohf0ZkAHLp5shcdNexlRgVkf2p6gMwsc/KP9tjaOeeR9QKzWYSCROTUUFZMecHnVpaoieDIGmRO5yP5t0hj7HWI0xadm/Nw/bXrtnBMToiEJw0u3H/v6vpBh80oO0xnY4xuOxZAX7TOjnjOKkUvAHEHv4vASw1F2wowFYysN3BIlWmOtP4HJxdi8VJqXlIVH8tO4v/yE8dYTm5KVoohKMX0YiHvxKWgtrF907WBEINOnLVlN0E0GjvU3fiDaSkpSfyQolgvtMhdj2/07IeAXwOuLhd4ZWkdxy67iJ5Qdyc42JeTG1sx1sUUAF4BZNf+s64aK9jsky2hX9yxKhMcmydsS3bLYHCsaEiKNyuVcC2nyWdOj6xqKlsLsmayJer3F4VjwxelSNp1MzArvXz+vds2DXk5+wT0WavkmaSMihnblTSyTli9TpKm2LOFUYfnAsgw== fsuser@FS-SRV-IN-04
+
   tasks:
+    - name: Extract username from full name
+      set_fact:
+        username: "{{ full_name.split(' ')[0] | lower }}"
+
+    - name: Create user with home directory
+      user:
+        name: "{{ username }}"
+        comment: "{{ full_name }}"
+        shell: /bin/bash
+        password: "{{ default_password | password_hash('sha512') }}"
+        createhome: yes
+
+    - name: Configure passwordless sudo for fsuser
+      copy:
+        dest: /etc/sudoers.d/fsuser
+        content: |
+          fsuser  ALL=(ALL)  NOPASSWD: ALL
+        owner: root
+        group: root
+        mode: '0440'
+
     - name: Ensure .ssh directory exists
       file:
         path: /home/fsuser/.ssh
@@ -12,8 +39,9 @@
         mode: '0700'
 
     - name: Add SSH key to authorized_keys
-      authorized_key:
-        user: fsuser
-        state: present
-        key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3RWItgvuZK3rVgONZXQ3zlNF1bdn4YfR67RiUVONH9UU9B6+YwCou94y5SOZ+QTR2dWrjS6k8Yh1UDrFKjd9J8dHR4F9hcxw8O5ilfPzhttgDWoMu0Ex+HHMgy+7eOvtZAqqbeLpRocmw/LOJSDcXlRPq/ZTQvvkThjyYjM18TnhURbzDHyUB2cTmhFy8HMpioPaxdYmr7J3brKZoxn7utWayeMDEwqY47ot+exFohf0ZkAHLp5shcdNexlRgVkf2p6gMwsc/KP9tjaOeeR9QKzWYSCROTUUFZMecHnVpaoieDIGmRO5yP5t0hj7HWI0xadm/Nw/bXrtnBMToiEJw0u3H/v6vpBh80oO0xnY4xuOxZAX7TOjnjOKkUvAHEHv4vASw1F2wowFYysN3BIlWmOtP4HJxdi8VJqXlIVH8tO4v/yE8dYTm5KVoohKMX0YiHvxKWgtrF907WBEINOnLVlN0E0GjvU3fiDaSkpSfyQolgvtMhdj2/07IeAXwOuLhd4ZWkdxy67iJ5Qdyc42JeTG1sx1sUUAF4BZNf+s64aK9jsky2hX9yxKhMcmydsS3bLYHCsaEiKNyuVcC2nyWdOj6xqKlsLsmayJer3F4VjwxelSNp1MzArvXz+vds2DXk5+wT0WavkmaSMihnblTSyTli9TpKm2LOFUYfnAsgw== fsuser@FS-SRV-IN-04"
-        path: /home/fsuser/.ssh/authorized_keys
+      copy:
+        dest: /home/fsuser/.ssh/authorized_keys
+        content: "{{ ssh_key }}"
+        owner: fsuser
+        group: fsuser
+        mode: '0600'

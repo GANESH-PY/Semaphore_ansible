@@ -40,3 +40,10 @@
         owner: ansible
         group: ansible
         mode: '0600'
+
+    # Optional: Disable strict host key checking temporarily
+    - name: Disable strict host key checking for SSH (temporary for debugging)
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: '^#   StrictHostKeyChecking ask'
+        line: 'StrictHostKeyChecking no'

@@ -1,6 +1,6 @@
 - name: Create a user with sudo privileges and add SSH key
   hosts: all
-  become: yes  # Ensure tasks run with root privileges
+  become: yes  # This ensures that the tasks are run as root
   tasks:
     - name: Create a new user
       user:

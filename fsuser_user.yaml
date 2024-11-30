@@ -24,12 +24,22 @@
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
 
+    - name: Debug: Check if authorized_keys file exists
+      stat:
+        path: "/home/{{ ansible_ssh_user }}/.ssh/authorized_keys"
+      register: authorized_keys_stat
+
+    - name: Debug output to confirm file status
+      debug:
+        msg: "File exists: {{ authorized_keys_stat.stat.exists }}"
+
     - name: Add SSH public key to authorized_keys
       authorized_key:
         user: "{{ ansible_ssh_user }}"
         state: present
         key: "{{ ssh_public_key }}"
         path: "/home/{{ ansible_ssh_user }}/.ssh/authorized_keys"
+      when: authorized_keys_stat.stat.exists
 
     - name: Set the correct permissions on the authorized_keys file
       file:
@@ -37,7 +47,15 @@
         mode: '0600'
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
-      # Adding `retries` and `delay` in case the file hasn't settled after creation
+      when: authorized_keys_stat.stat.exists
       retries: 3
       delay: 5
-      when: ansible_facts['os_family'] != 'Windows'
+
+    - name: Debug: Ensure permissions are correct
+      command: ls -l /home/{{ ansible_ssh_user }}/.ssh/authorized_keys
+      register: file_permissions
+      when: authorized_keys_stat.stat.exists
+
+    - name: Debug output to confirm file permissions
+      debug:
+        var: file_permissions.stdout

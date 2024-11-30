@@ -2,11 +2,14 @@
 - name: Create a user with sudo privileges and add SSH key
   hosts: all
   become: yes
+  vars:
+    ansible_password: "finsurge@123"
+    ansible_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045"
   tasks:
     - name: Create a new user
       user:
         name: ansible
-        password: "{{ 'finsurge@123' | password_hash('sha512') }}"
+        password: "{{ ansible_password | password_hash('sha512') }}"
         shell: /bin/bash
         state: present
 
@@ -34,14 +37,13 @@
 
     - name: Add SSH public key to authorized_keys
       copy:
-        content: |
-          ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045
+        content: "{{ ansible_ssh_key }}"
         dest: /home/ansible/.ssh/authorized_keys
         owner: ansible
         group: ansible
         mode: '0600'
 
-    # Optional: Disable strict host key checking temporarily
+    # Optional: Disable strict host key checking temporarily (only for debugging)
     - name: Disable strict host key checking for SSH (temporary for debugging)
       lineinfile:
         path: /etc/ssh/ssh_config

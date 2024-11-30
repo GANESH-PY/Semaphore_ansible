@@ -1,7 +1,9 @@
 ---
 - name: Create a user with sudo privileges and add SSH key
   hosts: all
-  become: yes
+  become: yes  # This will ensure the tasks are run as root
+  become_method: sudo  # Use sudo for privilege escalation
+  become_user: root  # Specify to become the root user
   tasks:
     - name: Create a new user
       user:
@@ -22,8 +24,8 @@
         state: present
         regexp: '^ansible'
         line: 'ansible ALL=(ALL) NOPASSWD:ALL'
-        validate: '/usr/sbin/visudo -cf %s'
-      become: yes  # Ensure this runs with elevated privileges
+        validate: '/usr/sbin/visudo -cf %s'  # Validate the sudoers file syntax
+      become: yes  # Ensure this task runs as root
 
     - name: Ensure .ssh directory exists for ansible user
       file:

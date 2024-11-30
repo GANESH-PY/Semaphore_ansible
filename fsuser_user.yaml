@@ -1,0 +1,31 @@
+---
+- name: Set up SSH key for fsuser
+  hosts: target_server
+  become: yes
+  vars:
+    ansible_ssh_user: fsuser
+    ansible_ssh_pass: "f$us#r@098"
+    ssh_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045"
+
+  tasks:
+    - name: Ensure the .ssh directory exists
+      file:
+        path: "/home/{{ ansible_ssh_user }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+
+    - name: Add SSH public key to authorized_keys
+      authorized_key:
+        user: "{{ ansible_ssh_user }}"
+        state: present
+        key: "{{ ssh_public_key }}"
+        path: "/home/{{ ansible_ssh_user }}/.ssh/authorized_keys"
+
+    - name: Set the correct permissions on the authorized_keys file
+      file:
+        path: "/home/{{ ansible_ssh_user }}/.ssh/authorized_keys"
+        mode: '0600'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"

@@ -1,37 +1,39 @@
-- name: Create a new user
-  user:
-    name: ansible
-    state: present
-    shell: /bin/bash
-    password: "{{ ansible_password | password_hash('sha512') }}"
-  become: yes
+---
+- name: Create a user with sudo privileges and add SSH key
+  remote_user: root  # Ensure the correct remote user is specified here (e.g., root)
+  hosts: all
+  become: true
+  tasks:
+    - name: Create a new user
+      user:
+        name: ansible
+        state: present
+        shell: /bin/bash
 
-- name: Add user to sudo group
-  user:
-    name: ansible
-    groups: sudo
-    append: yes
-  become: yes
+    - name: Add user to sudo group
+      user:
+        name: ansible
+        groups: sudo
+        append: yes
 
-- name: Allow passwordless sudo for the user (Debian/Ubuntu)
-  lineinfile:
-    path: /etc/sudoers
-    line: "ansible ALL=(ALL) NOPASSWD: ALL"
-    validate: '/usr/sbin/visudo -cf %s'
-  become: yes
+    - name: Allow passwordless sudo for the user (Debian/Ubuntu)
+      lineinfile:
+        path: /etc/sudoers
+        line: "ansible ALL=(ALL) NOPASSWD: ALL"
+        validate: '/usr/sbin/visudo -cf %s'
 
-- name: Ensure .ssh directory exists for ansible user
-  file:
-    path: "/home/ansible/.ssh"
-    state: directory
-    mode: 0700
-  become: yes
-  become_user: ansible
+    - name: Ensure .ssh directory exists for ansible user
+      file:
+        path: "/home/ansible/.ssh"
+        state: directory
+        mode: 0700
+      become: yes
+      become_user: ansible
 
-- name: Add SSH public key to authorized_keys
-  authorized_key:
-    user: ansible
-    state: present
-    key: "{{ lookup('file', '/path/to/your/ssh/public_key') }}"
-  become: yes
-  become_user: ansible
+    - name: Add SSH public key to authorized_keys
+      authorized_key:
+        user: ansible
+        state: present
+        key: "{{ lookup('file', '/path/to/your/ssh/public_key') }}"
+      become: yes
+      become_user: ansible

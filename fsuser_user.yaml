@@ -37,3 +37,7 @@
         mode: '0600'
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
+      # Adding `retries` and `delay` in case the file hasn't settled after creation
+      retries: 3
+      delay: 5
+      when: ansible_facts['os_family'] != 'Windows'

@@ -1,0 +1,37 @@
+---
+- name: Install Flatpak and add repositories on Ubuntu
+  hosts: all
+  become: yes  # Ensure we have the necessary privileges
+  tasks:
+    # Update the apt package index
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
+    # Install Flatpak package
+    - name: Install Flatpak
+      apt:
+        name: flatpak
+        state: present
+
+    # Install GNOME Software plugin for Flatpak (optional, but useful for GUI)
+    - name: Install GNOME Software plugin for Flatpak
+      apt:
+        name: gnome-software-plugin-flatpak
+        state: present
+
+    # Add the Flathub repository
+    - name: Add Flathub repository to Flatpak
+      shell: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+      args:
+        creates: /var/lib/flatpak/refs/remotes/flathub
+
+    # Install Flatpak apps (optional, example of installing GIMP)
+    - name: Install Flatpak app (GIMP)
+      shell: flatpak install -y flathub org.gimp.GIMP
+
+    # Optionally add more Flatpak repositories if needed (example)
+    # - name: Add another Flatpak repository (e.g., KDE)
+    #   shell: flatpak remote-add --if-not-exists kde-apps https://distribute.kde.org/flatpak/repo/
+    #   args:
+    #     creates: /var/lib/flatpak/refs/remotes/kde-apps

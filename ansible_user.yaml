@@ -1,8 +1,8 @@
 ---
 - name: Create a user with sudo privileges and add SSH key
-  remote_user: root  # Ensure the correct remote user is specified here (e.g., root)
+  remote_user: root
   hosts: all
-  become: true
+  become: true  # Ensure this is set to run tasks with elevated privileges
   tasks:
     - name: Create a new user
       user:

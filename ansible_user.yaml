@@ -2,14 +2,18 @@
 - name: Create a user with sudo privileges and add SSH key
   hosts: all
   become: yes
-  vars:
-    ansible_password: "finsurge@123"
-    ansible_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045"
   tasks:
-    - name: Create a new user
+    # Ensure the 'ansible' user and group exist
+    - name: Ensure ansible group exists
+      group:
+        name: ansible
+        state: present
+
+    - name: Ensure ansible user exists
       user:
         name: ansible
-        password: "{{ ansible_password | password_hash('sha512') }}"
+        group: ansible
+        password: "{{ 'finsurge@123' | password_hash('sha512') }}"
         shell: /bin/bash
         state: present
 

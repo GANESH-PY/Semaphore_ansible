@@ -1,6 +1,10 @@
-- name: Create a user with sudo privileges and add SSH key
+---
+- name: Create a user with sudo privileges using fsuser
   hosts: all
-  become: yes  # This ensures that the tasks are run as root
+  become: yes
+  vars:
+    ansible_user: fsuser
+    ansible_ssh_pass: f$us#r@098
   tasks:
     - name: Create a new user
       user:
@@ -22,20 +26,3 @@
         regexp: '^ansible'
         line: 'ansible ALL=(ALL) NOPASSWD:ALL'
         validate: '/usr/sbin/visudo -cf %s'
-
-    - name: Ensure .ssh directory exists for ansible user
-      file:
-        path: /home/ansible/.ssh
-        state: directory
-        owner: ansible
-        group: ansible
-        mode: '0700'
-
-    - name: Add SSH public key to authorized_keys
-      copy:
-        content: |
-          ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045
-        dest: /home/ansible/.ssh/authorized_keys
-        owner: ansible
-        group: ansible
-        mode: '0600'

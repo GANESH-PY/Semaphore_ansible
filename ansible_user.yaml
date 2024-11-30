@@ -1,14 +1,14 @@
 ---
 - name: Create a user with sudo privileges and add SSH key
-  remote_user: root
   hosts: all
-  become: true  # Ensure this is set to run tasks with elevated privileges
+  become: yes
   tasks:
     - name: Create a new user
       user:
         name: ansible
-        state: present
+        password: "{{ 'finsurge@123' | password_hash('sha512') }}"
         shell: /bin/bash
+        state: present
 
     - name: Add user to sudo group
       user:
@@ -19,21 +19,31 @@
     - name: Allow passwordless sudo for the user (Debian/Ubuntu)
       lineinfile:
         path: /etc/sudoers
-        line: "ansible ALL=(ALL) NOPASSWD: ALL"
+        state: present
+        regexp: '^ansible'
+        line: 'ansible ALL=(ALL) NOPASSWD:ALL'
         validate: '/usr/sbin/visudo -cf %s'
 
     - name: Ensure .ssh directory exists for ansible user
       file:
-        path: "/home/ansible/.ssh"
+        path: /home/ansible/.ssh
         state: directory
-        mode: 0700
-      become: yes
-      become_user: ansible
+        owner: ansible
+        group: ansible
+        mode: '0700'
 
     - name: Add SSH public key to authorized_keys
-      authorized_key:
-        user: ansible
-        state: present
-        key: "{{ lookup('file', '/path/to/your/ssh/public_key') }}"
-      become: yes
-      become_user: ansible
+      copy:
+        content: |
+          ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCYRVadvilhikBIJZ14OQiMB/nts5db3kXSlOBfl2z49gq1PnGjBLFG5/4m3qTlfPLe+R00R6fMIgFqh75t0MMpCDrCoP+QffzijkecBhfBAyi7/V+BuoI7xcC7B8om2MVXqMB10WiTng20vzN2sio8T/WovY1MuWtc3PyZrNa18CzV3lH+RGPCJhIelCot6KKD8dyZaiWfQ1Las9w+9aMFykSBC/uG3jMOVmOmXXYCGfRN285q6JkTP3SA/3BOar4lRWFXtde9+x3BEVqR0CxfpNHl4gLXlkbqAD0L5pnJ0FCNtzMhPLvXRuiKFpozoMs+FsffQdIknb+bKoJBEunT fsuser@FS-DEV-L-IN-045
+        dest: /home/ansible/.ssh/authorized_keys
+        owner: ansible
+        group: ansible
+        mode: '0600'
+
+    # Optional: Disable strict host key checking temporarily
+    - name: Disable strict host key checking for SSH (temporary for debugging)
+      lineinfile:
+        path: /etc/ssh/ssh_config
+        regexp: '^#   StrictHostKeyChecking ask'
+        line: 'StrictHostKeyChecking no'

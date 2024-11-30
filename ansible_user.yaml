@@ -41,11 +41,9 @@
         group: ansible
         mode: '0600'
 
-    # Allow fsuser to run sudo without a password
-    - name: Allow passwordless sudo for fsuser
+    # Optional: Disable strict host key checking temporarily
+    - name: Disable strict host key checking for SSH (temporary for debugging)
       lineinfile:
-        path: /etc/sudoers
-        state: present
-        regexp: '^fsuser'
-        line: 'fsuser ALL=(ALL) NOPASSWD:ALL'
-        validate: '/usr/sbin/visudo -cf %s'
+        path: /etc/ssh/ssh_config
+        regexp: '^#   StrictHostKeyChecking ask'
+        line: 'StrictHostKeyChecking no'

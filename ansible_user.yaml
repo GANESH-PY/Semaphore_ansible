@@ -1,7 +1,7 @@
 ---
 - name: Create a user with sudo privileges and add SSH key
-  hosts: servers  # Specify the group in inventory
-  become: yes      # Use sudo to run tasks
+  hosts: servers
+  become: yes  # Use sudo to run tasks
   become_user: root  # Ensure tasks run as root (superuser)
 
   tasks:
@@ -19,10 +19,12 @@
         append: yes
 
     - name: Allow passwordless sudo for the user (Debian/Ubuntu)
-      ansible.builtin.sudoers:
-        name: ansible
+      lineinfile:
+        path: /etc/sudoers
         state: present
-        options: 'NOPASSWD:ALL'
+        regexp: '^ansible'
+        line: 'ansible ALL=(ALL) NOPASSWD:ALL'
+        validate: '/usr/sbin/visudo -cf %s'
 
     - name: Ensure .ssh directory exists for ansible user
       file:

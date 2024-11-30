@@ -1,9 +1,7 @@
 ---
 - name: Create a user with sudo privileges and add SSH key
-  hosts: servers
-  become: yes  # Use sudo to run tasks
-  become_user: root  # Ensure tasks run as root (superuser)
-
+  hosts: all
+  become: yes
   tasks:
     - name: Create a new user
       user:
@@ -43,7 +41,7 @@
         group: ansible
         mode: '0600'
 
-    # Optional: Disable strict host key checking temporarily for SSH (useful for debugging)
+    # Optional: Disable strict host key checking temporarily
     - name: Disable strict host key checking for SSH (temporary for debugging)
       lineinfile:
         path: /etc/ssh/ssh_config

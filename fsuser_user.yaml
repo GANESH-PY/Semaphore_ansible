@@ -16,6 +16,14 @@
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
 
+    - name: Ensure authorized_keys file exists
+      file:
+        path: "/home/{{ ansible_ssh_user }}/.ssh/authorized_keys"
+        state: touch
+        mode: '0600'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+
     - name: Add SSH public key to authorized_keys
       authorized_key:
         user: "{{ ansible_ssh_user }}"

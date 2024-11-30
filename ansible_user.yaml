@@ -23,6 +23,7 @@
         regexp: '^ansible'
         line: 'ansible ALL=(ALL) NOPASSWD:ALL'
         validate: '/usr/sbin/visudo -cf %s'
+      become: yes  # Ensure this runs with elevated privileges
 
     - name: Ensure .ssh directory exists for ansible user
       file:

@@ -1,30 +1,23 @@
----
 - name: Deploy Ubuntu Docker container
   hosts: 192.168.1.5
   become: true
-  become_user: "{{ lookup('env','USER') }}"
-
   tasks:
     - name: Pull the latest Ubuntu image
       community.docker.docker_image:
         name: ubuntu
-        source: pull  # This ensures the image is pulled if it's not already present
+        tag: latest
+        source: pull
 
     - name: Create and start Ubuntu container
       community.docker.docker_container:
         name: ubuntu-container
-        image: ubuntu:latest  # Specify the image here
+        image: ubuntu:latest
         state: started
-        restart_policy: unless-stopped
-        command: sleep infinity  # Keeps the container running
-        ports:
-          - "8080:80"  # Optional, to map container ports to host
-        volumes:
-          - "/host/path:/container/path"  # Optional, to mount a directory
-        tty: yes  # Allocates a pseudo-TTY, useful for interactive sessions
+        command: "sleep infinity"
+        tty: yes  # Ensure the container can stay running interactively
 
     - name: Ensure the container is running
       community.docker.docker_container:
         name: ubuntu-container
-        image: ubuntu:latest  # Add the image parameter here too
         state: started
+        restart_policy: always

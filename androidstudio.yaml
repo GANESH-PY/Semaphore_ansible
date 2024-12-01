@@ -1,5 +1,5 @@
 - name: Install Postman using Snap
-  hosts: target_server  # This is the group name for the server
+  hosts: target_server  # Specify the target server or group name
   become: true
   tasks:
 
@@ -13,4 +13,3 @@
       ansible.builtin.snap:
         name: postman
         state: present
-        force: yes  # Ensures reinstallation if the package already exists

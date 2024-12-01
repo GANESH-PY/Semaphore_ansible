@@ -1,8 +1,8 @@
 ---
 - name: Deploy portainer-ce latest
-  hosts: "{{ my_hosts | d([]) }}"
+  hosts: 192.168.1.5  # Directly specifying the target host
   become: true
-  become_user: "{{ lookup('env','USER') }}"
+  become_user: "{{ lookup('env','USER') }}"  # Ensure this user has sudo privileges if needed
 
   tasks:
     - name: Create new volume
@@ -19,3 +19,4 @@
           - /run/docker.sock:/var/run/docker.sock
           - portainer-data:/data
         restart_policy: unless-stopped
+

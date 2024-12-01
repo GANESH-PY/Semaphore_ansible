@@ -1,5 +1,5 @@
 - name: Install Postman using Snap
-  hosts: localhost
+  hosts: target_server  # This is the group name for the server
   become: true
   tasks:
 

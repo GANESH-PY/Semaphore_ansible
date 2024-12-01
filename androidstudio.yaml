@@ -1,6 +1,5 @@
----
 - name: Install Postman using Snap
-  hosts: 192.168.1.5
+  hosts: localhost
   become: true
   tasks:
 
@@ -14,3 +13,4 @@
       ansible.builtin.snap:
         name: postman
         state: present
+        force: yes  # Ensures reinstallation if the package already exists

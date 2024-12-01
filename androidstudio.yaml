@@ -1,83 +1,85 @@
 ---
 - name: Install Android Studio on Ubuntu
-  hosts: 192.168.1.5  # Replace with your target host
-  become: true
+  hosts: all
+  become: yes
   tasks:
 
-    # Update apt packages
-    - name: Update apt packages
-      apt:
-        update_cache: yes
-        upgrade: yes
+    # Step 1: Gather facts about the system
+    - name: Gathering Facts
+      ansible.builtin.setup:
 
-    # Install required dependencies
+    # Step 2: Update apt packages
+    - name: Update apt packages
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600  # Cache valid for 1 hour
+
+    # Step 3: Install required dependencies
     - name: Install required dependencies
-      apt:
+      ansible.builtin.apt:
         name:
           - openjdk-11-jdk
-          - wget
           - unzip
-          - lib32stdc++6
-          - lib32z1
-          - lib32ncurses6
+          - wget
         state: present
 
-    # Download Android Studio
+    # Step 4: Download Android Studio tar.gz file
     - name: Download Android Studio
-      get_url:
-        url: https://dl.google.com/dl/android/studio/ide-zips/2023.1.1.17/android-studio-2023.1.1.17-linux.tar.gz
-        dest: /tmp/android-studio.tar.gz
+      ansible.builtin.get_url:
+        url: "https://dl.google.com/dl/android/studio/ide-zips/2021.1.1.22/android-studio-2021.1.1.22-linux.tar.gz"
+        dest: "/tmp/android-studio.tar.gz"
         mode: '0644'
 
-    # Verify the file is downloaded
+    # Step 5: Check if Android Studio tar.gz exists
     - name: Check if Android Studio tar.gz exists
-      stat:
-        path: /tmp/android-studio.tar.gz
-      register: file_stat
+      ansible.builtin.stat:
+        path: "/tmp/android-studio.tar.gz"
+      register: android_studio_tar
 
+    # Step 6: Fail if the Android Studio tar.gz file doesn't exist
     - name: Fail if the Android Studio tar.gz file doesn't exist
-      fail:
+      ansible.builtin.fail:
         msg: "Android Studio tar.gz file not found!"
-      when: not file_stat.stat.exists
+      when: android_studio_tar.stat.exists == false
 
-    # Extract Android Studio if the file exists
+    # Step 7: Extract Android Studio tar.gz file
     - name: Extract Android Studio
-      unarchive:
-        src: /tmp/android-studio.tar.gz
-        dest: /opt/
+      ansible.builtin.unarchive:
+        src: "/tmp/android-studio.tar.gz"
+        dest: "/opt/"
         remote_src: yes
-      when: file_stat.stat.exists
+        creates: "/opt/android-studio"
+        
+    # Step 8: Set up the Android Studio environment
+    - name: Set up environment variables
+      ansible.builtin.lineinfile:
+        path: "/etc/environment"
+        line: "ANDROID_STUDIO_HOME=/opt/android-studio"
+        create: yes
 
-    # Set Android Studio to be executable
-    - name: Create a symbolic link for android-studio
-      file:
-        src: /opt/android-studio-*/bin/studio.sh
-        dest: /usr/local/bin/android-studio
+    # Step 9: Create a symlink for Android Studio executable
+    - name: Create symlink for android studio
+      ansible.builtin.file:
+        src: "/opt/android-studio/bin/studio.sh"
+        dest: "/usr/local/bin/android-studio"
         state: link
 
-    # Set environment variables for Android Studio
-    - name: Add Android Studio to PATH
-      lineinfile:
-        path: /etc/profile.d/android-studio.sh
-        line: 'export PATH=$PATH:/opt/android-studio/bin'
-        create: yes
+    # Step 10: Install additional Android Studio dependencies
+    - name: Install additional dependencies for Android Studio
+      ansible.builtin.apt:
+        name:
+          - lib32z1
+          - lib32ncurses6
+          - lib32stdc++6
         state: present
 
-    # Set JAVA_HOME environment variable
-    - name: Set JAVA_HOME for Android Studio
-      lineinfile:
-        path: /etc/profile.d/java.sh
-        line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
-        create: yes
-        state: present
-
-    # Reload the environment variables
-    - name: Reload environment variables
-      shell: source /etc/profile.d/android-studio.sh && source /etc/profile.d/java.sh
-      ignore_errors: yes
-
-    # Clean up downloaded tar.gz file
-    - name: Clean up Android Studio tar.gz
-      file:
-        path: /tmp/android-studio.tar.gz
+    # Step 11: Clean up temporary files
+    - name: Clean up the downloaded tarball
+      ansible.builtin.file:
+        path: "/tmp/android-studio.tar.gz"
         state: absent
+
+    # Step 12: Inform user to run Android Studio
+    - name: Display success message
+      ansible.builtin.debug:
+        msg: "Android Studio installation completed! You can now run it using the command 'android-studio'."

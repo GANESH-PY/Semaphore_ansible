@@ -14,7 +14,7 @@
         image: ubuntu:latest
         state: started
         command: "sleep infinity"
-        tty: yes  # Ensure the container can stay running interactively
+        tty: yes  # Ensure the container stays alive
 
     - name: Ensure the container is running
       community.docker.docker_container:

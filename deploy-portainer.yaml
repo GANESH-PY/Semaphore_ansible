@@ -1,22 +1,29 @@
 ---
-- name: Deploy portainer-ce latest
-  hosts: 192.168.1.5  # Directly specifying the target host
+- name: Deploy Ubuntu Docker container
+  hosts: 192.168.1.5
   become: true
-  become_user: "{{ lookup('env','USER') }}"  # Ensure this user has sudo privileges if needed
+  become_user: "{{ lookup('env','USER') }}"
 
   tasks:
-    - name: Create new volume
-      community.docker.docker_volume:
-        name: portainer-data
+    - name: Pull the latest Ubuntu image
+      community.docker.docker_image:
+        name: ubuntu
+        source: pull  # This ensures the image is pulled if it's not already present
 
-    - name: Deploy portainer
+    - name: Create and start Ubuntu container
       community.docker.docker_container:
-        name: portainer
-        image: "docker.io/portainer/portainer-ce"
-        ports:
-          - "9443:9443"
-        volumes:
-          - /run/docker.sock:/var/run/docker.sock
-          - portainer-data:/data
+        name: ubuntu-container
+        image: ubuntu:latest
+        state: started
         restart_policy: unless-stopped
+        command: sleep infinity  # Keeps the container running
+        ports:
+          - "8080:80"  # Optional, to map container ports to host
+        volumes:
+          - "/host/path:/container/path"  # Optional, to mount a directory
+        tty: yes  # Allocates a pseudo-TTY, useful for interactive sessions
 
+    - name: Ensure the container is running
+      community.docker.docker_container:
+        name: ubuntu-container
+        state: started

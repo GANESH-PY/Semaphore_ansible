@@ -1,39 +1,71 @@
 ---
-- name: Install Android Studio
-  hosts: localhost
+- name: Install Android Studio on Ubuntu
+  hosts: 192.168.1.5  # Replace with your target host
   become: true
-  become_user: root
-  vars:
-    ansible_become_password: "f$us#r@098"
-
   tasks:
-    - name: Update and upgrade APT packages
+
+    # Update apt packages
+    - name: Update apt packages
       apt:
         update_cache: yes
-        upgrade: dist
+        upgrade: yes
 
-    - name: Install snapd
+    # Install dependencies
+    - name: Install required dependencies
       apt:
-        name: snapd
+        name:
+          - openjdk-11-jdk
+          - wget
+          - unzip
+          - lib32stdc++6
+          - lib32z1
+          - lib32ncurses6
         state: present
 
-    - name: Ensure snapd is running
-      service:
-        name: snapd
-        state: started
-        enabled: true
+    # Download Android Studio
+    - name: Download Android Studio
+      get_url:
+        url: https://dl.google.com/dl/android/studio/ide-zips/2023.1.1.17/android-studio-2023.1.1.17-linux.tar.gz
+        dest: /tmp/android-studio.tar.gz
+        mode: '0644'
 
-    - name: Install Android Studio using snap
-      snap:
-        name: android-studio
-        classic: true
+    # Extract the downloaded Android Studio tar.gz
+    - name: Extract Android Studio
+      unarchive:
+        src: /tmp/android-studio.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    # Set Android Studio to be executable
+    - name: Create a symbolic link for android-studio
+      file:
+        src: /opt/android-studio-*/bin/studio.sh
+        dest: /usr/local/bin/android-studio
+        state: link
+
+    # Set environment variables for Android Studio
+    - name: Add Android Studio to PATH
+      lineinfile:
+        path: /etc/profile.d/android-studio.sh
+        line: 'export PATH=$PATH:/opt/android-studio/bin'
+        create: yes
         state: present
 
-    - name: Verify Android Studio installation
-      command: android-studio --version
-      register: android_studio_version
+    # Set JAVA_HOME environment variable
+    - name: Set JAVA_HOME for Android Studio
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+        create: yes
+        state: present
+
+    # Reload the environment variables
+    - name: Reload environment variables
+      shell: source /etc/profile.d/android-studio.sh && source /etc/profile.d/java.sh
       ignore_errors: yes
 
-    - name: Display Android Studio version
-      debug:
-        msg: "{{ android_studio_version.stdout | default('Android Studio installation verification failed') }}"
+    # Clean up downloaded tar.gz file
+    - name: Clean up Android Studio tar.gz
+      file:
+        path: /tmp/android-studio.tar.gz
+        state: absent

@@ -10,7 +10,7 @@
         update_cache: yes
         upgrade: yes
 
-    # Install dependencies
+    # Install required dependencies
     - name: Install required dependencies
       apt:
         name:
@@ -29,12 +29,24 @@
         dest: /tmp/android-studio.tar.gz
         mode: '0644'
 
-    # Extract the downloaded Android Studio tar.gz
+    # Verify the file is downloaded
+    - name: Check if Android Studio tar.gz exists
+      stat:
+        path: /tmp/android-studio.tar.gz
+      register: file_stat
+
+    - name: Fail if the Android Studio tar.gz file doesn't exist
+      fail:
+        msg: "Android Studio tar.gz file not found!"
+      when: not file_stat.stat.exists
+
+    # Extract Android Studio if the file exists
     - name: Extract Android Studio
       unarchive:
         src: /tmp/android-studio.tar.gz
         dest: /opt/
         remote_src: yes
+      when: file_stat.stat.exists
 
     # Set Android Studio to be executable
     - name: Create a symbolic link for android-studio

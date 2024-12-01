@@ -13,7 +13,7 @@
     - name: Create and start Ubuntu container
       community.docker.docker_container:
         name: ubuntu-container
-        image: ubuntu:latest
+        image: ubuntu:latest  # Specify the image here
         state: started
         restart_policy: unless-stopped
         command: sleep infinity  # Keeps the container running
@@ -26,4 +26,5 @@
     - name: Ensure the container is running
       community.docker.docker_container:
         name: ubuntu-container
+        image: ubuntu:latest  # Add the image parameter here too
         state: started

@@ -23,26 +23,30 @@
           - wget
         state: present
 
-    # Step 4: Download Android Studio tar.gz file
+    # Step 4: Download Android Studio
     - name: Download Android Studio
       ansible.builtin.get_url:
         url: "https://dl.google.com/dl/android/studio/ide-zips/2021.1.1.22/android-studio-2021.1.1.22-linux.tar.gz"
         dest: "/tmp/android-studio.tar.gz"
         mode: '0644'
 
-    # Step 5: Check if Android Studio tar.gz exists
-    - name: Check if Android Studio tar.gz exists
+    # Debugging Step: Confirm if the file was downloaded
+    - name: Debug: Check if the Android Studio tarball exists
       ansible.builtin.stat:
         path: "/tmp/android-studio.tar.gz"
       register: android_studio_tar
 
-    # Step 6: Fail if the Android Studio tar.gz file doesn't exist
+    - name: Debugging output
+      ansible.builtin.debug:
+        msg: "The file exists: {{ android_studio_tar.stat.exists }}"
+
+    # Step 5: Fail if the Android Studio tar.gz file doesn't exist
     - name: Fail if the Android Studio tar.gz file doesn't exist
       ansible.builtin.fail:
         msg: "Android Studio tar.gz file not found!"
       when: android_studio_tar.stat.exists == false
 
-    # Step 7: Extract Android Studio tar.gz file
+    # Step 6: Extract Android Studio tar.gz file
     - name: Extract Android Studio
       ansible.builtin.unarchive:
         src: "/tmp/android-studio.tar.gz"
@@ -50,21 +54,21 @@
         remote_src: yes
         creates: "/opt/android-studio"
         
-    # Step 8: Set up the Android Studio environment
+    # Step 7: Set up the Android Studio environment
     - name: Set up environment variables
       ansible.builtin.lineinfile:
         path: "/etc/environment"
         line: "ANDROID_STUDIO_HOME=/opt/android-studio"
         create: yes
 
-    # Step 9: Create a symlink for Android Studio executable
+    # Step 8: Create a symlink for Android Studio executable
     - name: Create symlink for android studio
       ansible.builtin.file:
         src: "/opt/android-studio/bin/studio.sh"
         dest: "/usr/local/bin/android-studio"
         state: link
 
-    # Step 10: Install additional Android Studio dependencies
+    # Step 9: Install additional Android Studio dependencies
     - name: Install additional dependencies for Android Studio
       ansible.builtin.apt:
         name:
@@ -73,13 +77,13 @@
           - lib32stdc++6
         state: present
 
-    # Step 11: Clean up temporary files
+    # Step 10: Clean up temporary files
     - name: Clean up the downloaded tarball
       ansible.builtin.file:
         path: "/tmp/android-studio.tar.gz"
         state: absent
 
-    # Step 12: Inform user to run Android Studio
+    # Step 11: Inform user to run Android Studio
     - name: Display success message
       ansible.builtin.debug:
         msg: "Android Studio installation completed! You can now run it using the command 'android-studio'."

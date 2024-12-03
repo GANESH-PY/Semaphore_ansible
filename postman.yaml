@@ -26,7 +26,7 @@
     - name: Wait for Postman to be installed (retry logic)
       ansible.builtin.wait_for:
         path: "/snap/bin/postman"
-        state: file
+        state: present
         timeout: 60
         delay: 5
 

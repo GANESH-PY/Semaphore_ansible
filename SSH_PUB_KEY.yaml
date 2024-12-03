@@ -6,6 +6,11 @@
     ansible_user: fsuser
     ansible_ssh_pass: 'f$us#r@098'  # Provide the password here
   tasks:
+    - name: Check if flag exists
+      ansible.builtin.stat:
+        path: "/home/fsuser/.ssh/authorized_keys"
+      register: flag_file
+
     - name: Ensure ssh-copy-id is executed
       ansible.builtin.shell: "ssh-copy-id fsuser@{{ inventory_hostname }}"
       args:

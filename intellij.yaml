@@ -1,5 +1,5 @@
 ---
-- name: Installing Intellij
+- name: Installing IntelliJ IDEA Community Edition
   hosts: all
   become: True
   gather_facts: False
@@ -9,46 +9,54 @@
     intellij_installation_path: /opt
 
   tasks:
-    - name: Downloading IntelliJ tarball
-      get_url:
+    - name: Download IntelliJ tarball
+      ansible.builtin.get_url:
         url: "{{ intellij_download_link }}"
         dest: "/tmp/idea.tar.gz"
 
-    - name: Ensure the destination directory exists
-      ansible.builtin.file:
-        path: "{{ intellij_installation_path }}/idea-IC"
-        state: directory
+    - name: Extract the tar.gz file
+      ansible.builtin.unarchive:
+        src: "/tmp/idea.tar.gz"
+        dest: "{{ intellij_installation_path }}"
+        remote_src: yes
+
+    - name: Find IntelliJ installation directory
+      ansible.builtin.find:
+        paths: "{{ intellij_installation_path }}"
+        patterns: "idea-IC-*"
+        file_type: directory
+      register: intellij_dirs
+
+    - name: Ensure IntelliJ installation directory is found
+      ansible.builtin.assert:
+        that:
+          - intellij_dirs.matched > 0
+        fail_msg: "IntelliJ installation directory not found after extraction."
+
+    - name: Get the IntelliJ installation directory
+      ansible.builtin.set_fact:
+        intellij_install_dir: "{{ intellij_dirs.files[0].path }}"
+
+    - name: Create desktop entry for IntelliJ IDEA
+      ansible.builtin.copy:
+        dest: /usr/share/applications/intellij.desktop
+        content: |
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=IntelliJ IDEA Community Edition
+          Icon={{ intellij_install_dir }}/bin/idea.svg
+          Exec="{{ intellij_install_dir }}/bin/idea.sh" %f
+          Comment=Capable and Ergonomic IDE for JVM
+          Categories=Development;IDE;
+          Terminal=false
+          StartupWMClass=jetbrains-idea-ce
+          StartupNotify=true
         owner: root
         group: root
-        mode: "0755"
+        mode: "0644"
 
-    - name: Extract the tar.gz file
-      ansible.builtin.command: tar -xzf /tmp/idea.tar.gz -C "{{ intellij_installation_path }}/idea-IC"
-
-
-    - name: Change directory to IntelliJ bin
-      ansible.builtin.shell: |
-        cd /opt/idea-IC
-        cd $(ls -d */)
-        cd bin
-
-    - name: Store bin path in a variable
-      ansible.builtin.shell: pwd
-      register: intellij_bin_dir
-
-    - name: Create dektop entry
-      ansible.builtin.shell: |
-        touch /usr/share/applications/intellij.desktop
-        cat <<EOF > /usr/share/applications/intellij.desktop
-        [Desktop Entry]
-        Version=1.0
-        Type=Application
-        Name=IntelliJ IDEA Community Edition
-        Icon=/opt/idea-IC/idea-IC-241.15989.150/bin/idea.svg
-        Exec="/opt/idea-IC/idea-IC-241.15989.150/bin/idea.sh" %f
-        Comment=Capable and Ergonomic IDE for JVM
-        Categories=Development;IDE;
-        Terminal=false
-        StartupWMClass=jetbrains-idea-ce
-        StartupNotify=true 
-        EOF
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: /tmp/idea.tar.gz
+        state: absent

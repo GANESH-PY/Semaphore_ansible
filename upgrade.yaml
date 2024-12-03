@@ -1,0 +1,13 @@
+- name: Installing essentials
+  hosts: all
+  become: true
+  gather_facts: False
+
+  tasks:
+    - name: Apt update
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Apt upgrade
+      ansible.builtin.apt:
+         upgrade: yes

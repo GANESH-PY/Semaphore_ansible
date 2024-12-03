@@ -23,6 +23,13 @@
         creates: "/snap/bin/postman"
       ignore_errors: True
 
+    - name: Wait for Postman to be installed (retry logic)
+      ansible.builtin.wait_for:
+        path: "/snap/bin/postman"
+        state: file
+        timeout: 60
+        delay: 5
+
     - name: Verify Postman installation
       ansible.builtin.command: /snap/bin/postman --version
       register: postman_version

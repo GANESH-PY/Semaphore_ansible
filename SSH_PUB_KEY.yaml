@@ -1,0 +1,10 @@
+---
+- name: Add SSH public key to remote host using ssh-copy-id
+  hosts: all  # Use all hosts defined in the inventory file
+  become: false
+  tasks:
+    - name: Ensure ssh-copy-id is executed
+      ansible.builtin.shell: "ssh-copy-id fsuser@{{ inventory_hostname }}"
+      args:
+        creates: "/home/fsuser/.ssh/authorized_keys"
+      when: flag_file.stat.exists == false

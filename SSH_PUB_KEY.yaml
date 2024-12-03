@@ -5,28 +5,24 @@
   vars:
     ansible_user: fsuser
     ansible_ssh_pass: 'f$us#r@098'  # Provide the password here
+    
   tasks:
-    - name: Check if .ssh directory exists
-      ansible.builtin.stat:
-        path: "/home/fsuser/.ssh"
-      register: ssh_dir
-
-    - name: Create .ssh directory if it does not exist
+    - name: Ensure the .ssh directory exists
       ansible.builtin.file:
-        path: "/home/fsuser/.ssh"
+        path: /home/{{ ansible_user }}/.ssh
         state: directory
-        mode: "0700"
-        owner: fsuser
-        group: fsuser
-      when: ssh_dir.stat.exists == false
+        mode: '0700'
 
-    - name: Check if authorized_keys file exists
-      ansible.builtin.stat:
-        path: "/home/fsuser/.ssh/authorized_keys"
-      register: flag_file
+    - name: Copy public key to authorized_keys
+      ansible.builtin.copy:
+        src: /home/semaphore/id_rsa.pub
+        dest: /home/{{ ansible_user }}/.ssh/authorized_keys
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0600'
 
-    - name: Ensure ssh-copy-id is executed
-      ansible.builtin.shell: "ssh-copy-id -v fsuser@{{ inventory_hostname }}"
-      args:
-        creates: "/home/fsuser/.ssh/authorized_keys"
-      when: flag_file.stat.exists == false
+    - name: Ensure correct permissions for authorized_keys
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/.ssh/authorized_keys
+        state: file
+        mode: '0600'

@@ -1,0 +1,13 @@
+---
+- name: Installing postman
+  hosts: all
+  become: True
+  gather_facts: False
+
+  tasks:
+  
+    - name: Download snap version of postman
+      ansible.builtin.shell: snap install postman
+      args:
+       creates: "/snap/bin/postman"
+      ignore_errors: True

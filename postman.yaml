@@ -1,13 +1,33 @@
 ---
-- name: Installing postman
+- name: Installing Postman via Snap
   hosts: all
   become: True
   gather_facts: False
 
   tasks:
-  
-    - name: Download snap version of postman
+    - name: Ensure snapd is installed
+      ansible.builtin.apt:
+        name: snapd
+        state: present
+        update_cache: yes
+
+    - name: Ensure snapd service is running
+      ansible.builtin.service:
+        name: snapd
+        state: started
+        enabled: yes
+
+    - name: Download and install Postman via Snap
       ansible.builtin.shell: snap install postman
       args:
-       creates: "/snap/bin/postman"
+        creates: "/snap/bin/postman"
       ignore_errors: True
+
+    - name: Verify Postman installation
+      ansible.builtin.command: /snap/bin/postman --version
+      register: postman_version
+      failed_when: false
+
+    - name: Show Postman version (to confirm installation)
+      debug:
+        msg: "Postman version: {{ postman_version.stdout }}"
